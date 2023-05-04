@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <style>
+      rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;   
+      }
+
+      text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+      }
+
+      text.axis-workweek {
+        fill: #000;
+      }
+
+      text.axis-worktime {
+        fill: #000;
+      }
+    </style>
+    <!-- <script src="https://d3js.ordg/d3.v5.js"></script> -->
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
+    <!-- <script src='d3/d3.min.js'></script> -->
+  </head>
+  <body>
+    <div id="chart"></div>
+    <script type="text/javascript">
+
+//画图主函数
+ function draw(width,centerColorIndex, innerR, max,arcData1, arcData2) {
+        // let width = 240;
+        let height = 240;
+        let svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+
+        // let max = d3.extent([d3.extent(arcData1)[1],d3.extent(arcData2)][1])[1]
+        // console.log("max",max)
+
+        //画arc的工厂函数1
+        let arcFactory1 = d3.svg.arc()
+            .innerRadius(innerR)
+            .outerRadius(function (d) {
+                let da = arcData1[d];
+                if (arcData2[d] > arcData1[d]) {
+                    da = arcData2[d]
+                }
+                // if( da/max* 55 + innerR>85){
+                //     return 85
+                // }
+
+                // if(da/max* 55 + innerR<=0){
+                //     return innerR;
+                // }
+                if (da > 0) {
+                    return da/max* 85 + innerR
+                }
+
+                else {
+                    return innerR;
+                }
+            })
+            .startAngle(function (d) {
+                return Math.PI / 12 * d
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1)
+            });
+
+        //画arc的工厂函数2
+        let arcFactory = d3.svg.arc()
+            .innerRadius(innerR)
+            .outerRadius(function (d) {
+                let da = arcData1[d];
+                // console.log("d2:",da/max* 55 + height / 10);
+                if (arcData1[d] >= arcData2[d]) {
+                    da = arcData2[d]
+                }
+                // if(da/max* 55 + innerR>85){
+                //     return 85
+                // }
+                // if(da/max* 55 + innerR<=0){
+                //     return innerR;
+                // }
+                if (da > 0) {
+
+                    return da/max* 85 + innerR
+                }
+                else {
+                    return innerR;
+                }
+            })
+            .startAngle(function (d) {
+                return Math.PI / 12 * d
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1) 
+            });
+
+
+        //画第一组24个的arc
+        for (let index = 0; index < 25; index++) {
+            let da, color;
+            if (arcData1[index] > arcData2[index]) {
+                da = arcData1[index]
+                color = "#3399ff"
+            }
+            else {
+                da = arcData2[index]
+                color = "#623fa3"
+            }
+            // console.log("2",da)
+            let g1 = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+            g1.attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("stroke-width","0.2px")
+                .attr("d", arcFactory1)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+        //画第二组24个的arc
+        for (let index = 0; index < 25; index++) {
+            let da, color;
+            if (arcData1[index] > arcData2[index]) {
+                da = arcData2[index]
+                color = "#623fa3"
+            }
+            else {
+                da = arcData1[index]
+                color = "#3399ff"
+            }
+
+            // console.log("1",da)
+            let g = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+                .attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("stroke-width","0.2px")
+                .attr("d", arcFactory)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+
+        //绘制内圆
+        svg.append("circle")
+            .attr("stroke", "LightGrey")
+            .attr("fill", centerColorIndex)
+            .attr("r",innerR) //半径为240/10=24
+            .attr("stroke-width","0.4px")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+        //绘制外圆
+        // svg.append("circle")
+        //     .attr("stroke", "LightGrey")
+        //     .attr("fill", "none")
+        //     .attr("r", 85+innerR)
+        //     .attr("stroke-width","2px")
+        //     .attr("cx", width / 2)
+        //     .attr("cy", height / 2)
+
+    };
+
+
+
+
+        d3.json("onOffTime.json", function(data){
+
+         var  keyList = []
+         for(var key in data){
+          keyList.push(key);
+         }
+         console.log("keyList:", keyList)
+
+         var width = 200;
+         for (var i = 0; i<1; i++){
+          // console.log(data[keyList[i]])
+          d1 = data[keyList[i]][0];
+          d2 = data[keyList[i]][1];
+
+          var c = d3.scale.category10();
+          var colorScale=d3.scale.ordinal()
+              .domain(['P0','P1','P2','P3','P4','P5','P6','P7'])
+              .range([c(0),c(1),c(2),c(3),c(4),c(5),c(6),c(7)]);
+          var color=colorScale(keyList[i]);
+          // console.log("color:",color);
+
+          // console.log("d1:",d1);
+          // console.log("d2:",d2);
+
+           d3.json("total.json", function(data){
+            console.log(data);
+            var max = d3.extent(data)[1]
+            console.log("max:", max)
+            var chart= draw(width,color,10,max,d1,d2);
+          });
+          
+         }
+         
+        });
+
+
+
+    </script>
+  </body>
+</html>
+
+

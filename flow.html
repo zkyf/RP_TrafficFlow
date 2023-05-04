@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>voronoiV2</title>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+    <!--library-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+            integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+            crossorigin=""></script>
+    <script src="js/leaflet-swoopy.js"></script>
+    <script src='js/jquery-2.1.1.min.js'></script>
+    <script src='js/d3.min.js'></script>
+    <script src="js/math.js"></script>
+    <style>
+        .Rectangle {
+            width: 89px;
+            height: 72px;
+            border-radius: 9px;
+            box-shadow: 1px 1px 6px 0 rgba(0, 0, 0, 0.2);
+            background-color: #ffffff;
+            padding: 20px;
+        }
+
+        .Line-3 {
+            width: 33.33%;
+            height: 1px;
+            border: solid 2px #2ec4b6;
+            background-color: #2ec4b6;
+            margin-top: 5px;
+        }
+
+        .Shape {
+            width: 10%;
+            height: 12px;
+            border: solid 2px #2ec4b6;
+        }
+
+        .legend-text1 {
+            height: 18px;
+            font-family: STSongti-TC, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            font-style: normal;
+            font-stretch: normal;
+            line-height: normal;
+            letter-spacing: 0.25px;
+            color: #242423;
+            margin-left: 10px;
+        }
+
+        .Oval {
+            width: 9px;
+            height: 9px;
+            box-shadow: 1px 1px 3px 0 rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+
+        .Line-2 {
+            width: 120px;
+            height: 1px;
+            border: solid 1px #ff9f1c;
+        }
+
+
+        .multi-range > hr {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+        }
+
+        .multi-range > input[type=range] {
+            width: calc(100% - 16px);
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+        }
+
+        .multi-range > input[type=range]:last-of-type {
+            margin-left: 16px;
+        }
+
+        .multi-range > input[type=range]::-webkit-slider-thumb {
+            transform: translateY(-18px);
+        }
+
+        .multi-range > input[type=range]::-webkit-slider-runnable-track {
+            -webkit-appearance: none;
+            height: 0px;
+        }
+
+        .multi-range > input[type=range]::-moz-range-thumb {
+            transform: translateY(-18px);
+        }
+
+        .multi-range > input[type=range]::-moz-range-track {
+            -webkit-appearance: none;
+            height: 0px;
+        }
+
+        .multi-range > input[type=range]::-ms-thumb {
+            transform: translateY(-18px);
+        }
+
+        .multi-range > input[type=range]::-ms-track {
+            -webkit-appearance: none;
+            height: 0px;
+        }
+
+
+        [slider] {
+            position: relative;
+            height: 14px;
+            border-radius: 10px;
+            text-align: left;
+            margin: 45px 0 10px 0;
+        }
+
+        [slider] > div {
+            position: absolute;
+            left: 13px;
+            right: 15px;
+            height: 14px;
+        }
+
+        [slider] > div > [inverse-left] {
+            position: absolute;
+            left: 0;
+            height: 14px;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            margin: 0 7px;
+        }
+
+        [slider] > div > [inverse-right] {
+            position: absolute;
+            right: 0;
+            height: 14px;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            margin: 0 7px;
+        }
+
+        [slider] > div > [range] {
+            position: absolute;
+            left: 0;
+            height: 3px;
+            width: 110px;
+            border-radius: 14px;
+            background-color: #ff9f1c;
+        }
+
+        [slider] > div > [thumb] {
+            position: absolute;
+            top: -7px;
+            z-index: 2;
+            height: 14px;
+            width: 14px;
+            text-align: left;
+            margin-left: -11px;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+            background-color: #FFF;
+            border-radius: 50%;
+            outline: none;
+        }
+
+        [slider] > input[type=range] {
+            position: absolute;
+            pointer-events: none;
+            -webkit-appearance: none;
+            z-index: 3;
+            height: 14px;
+            top: -2px;
+            width: 100%;
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+            filter: alpha(opacity=0);
+            -moz-opacity: 0;
+            -khtml-opacity: 0;
+            opacity: 0;
+        }
+
+        div[slider] > input[type=range]::-ms-track {
+            -webkit-appearance: none;
+            background: transparent;
+            color: transparent;
+        }
+
+        div[slider] > input[type=range]::-moz-range-track {
+            -moz-appearance: none;
+            background: transparent;
+            color: transparent;
+        }
+
+        div[slider] > input[type=range]:focus::-webkit-slider-runnable-track {
+            background: transparent;
+            border: transparent;
+        }
+
+        div[slider] > input[type=range]:focus {
+            outline: none;
+        }
+
+        div[slider] > input[type=range]::-ms-thumb {
+            pointer-events: all;
+            width: 28px;
+            height: 28px;
+            border-radius: 0px;
+            border: 0 none;
+            background: red;
+        }
+
+        div[slider] > input[type=range]::-moz-range-thumb {
+            pointer-events: all;
+            width: 28px;
+            height: 28px;
+            border-radius: 0px;
+            border: 0 none;
+            background: red;
+        }
+
+        div[slider] > input[type=range]::-webkit-slider-thumb {
+            pointer-events: all;
+            width: 28px;
+            height: 28px;
+            border-radius: 0px;
+            border: 0 none;
+            background: red;
+            -webkit-appearance: none;
+        }
+
+        div[slider] > input[type=range]::-ms-fill-lower {
+            background: transparent;
+            border: 0 none;
+        }
+
+        div[slider] > input[type=range]::-ms-fill-upper {
+            background: transparent;
+            border: 0 none;
+        }
+
+        div[slider] > input[type=range]::-ms-tooltip {
+            display: none;
+        }
+
+        [slider] > div > [sign] {
+            opacity: 1;
+            position: absolute;
+            margin-left: -22px;
+            top: 10px;
+            z-index: 3;
+            background-color: #fff;
+            width: 14px;
+            height: 9px;
+            font-family: STSongti-TC, sans-serif;
+            font-size: 6px;
+            font-weight: bold;
+            font-style: normal;
+            font-stretch: normal;
+            line-height: normal;
+            letter-spacing: 0.13px;
+            color: #242423;
+            -webkit-border-radius: 28px;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /*[slider] > div > [sign]:after {*/
+        /*    position: absolute;*/
+        /*    content: '';*/
+        /*    left: 0;*/
+        /*    border-radius: 16px;*/
+        /*    top: 19px;*/
+        /*    border-left: 14px solid transparent;*/
+        /*    border-right: 14px solid transparent;*/
+        /*    border-top-width: 16px;*/
+        /*    border-top-style: solid;*/
+        /*    border-top-color: #1ABC9C;*/
+        /*}*/
+
+        [slider] > div > [sign] > span {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 28px;
+        }
+
+        [slider]:hover > div > [sign] {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="mapid" style="width: 1300px; height: 600px;"></div>
+<div style="display:flex">
+    <div class="Rectangle">
+        <div style="display:flex;padding:8px;">
+            <div class="Line-3"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="8" height="14" viewBox="0 0 8 14">
+                <path fill="none" fill-rule="evenodd" transform="translate(-3,0)" stroke="#2ec4b6"
+                      stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M1 13l6-6-6-6"/>
+            </svg>
+            <span class="legend-text1">流进</span>
+        </div>
+        <div style="display:flex;padding: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="8" height="14" viewBox="0 0 10 16">
+                <path fill="none" fill-rule="evenodd" transform="scale(-2,2) translate(-10,-3)" stroke="#ed6a5a"
+                      stroke-linecap="round" stroke-linejoin="round" stroke-width="5" d="M1 13l6-6-6-6"/>
+            </svg>
+            <div class="Line-3" style="background-color: #ed6a5a;border: solid 2px #ed6a5a; "></div>
+            <span class="legend-text1">流出</span>
+        </div>
+    </div>
+    <div>
+        <div>
+            <div slider id="slider-distance" style="padding-left:80px">
+                <div>
+                    <div inverse-left style="width:70%;"></div>
+                    <div inverse-right style="width:70%;"></div>
+                    <div range style="left:30%;right:40%;"></div>
+                    <span thumb style="left:30%;"></span>
+                    <span thumb style="left:60%;transform: translate(110px, 0px);"></span>
+                    <div sign style="left:30%;">
+                        <span id="value">00:00</span>
+                    </div>
+                    <div sign style="left:60%;">
+                        <span id="value" style="margin-left: 110px;">24:00</span>
+                    </div>
+                </div>
+                <input type="range" tabindex="0" value="0" max="24" min="0" step="1" oninput="
+  this.value=Math.min(this.value,this.parentNode.childNodes[5].value-1);
+  var value=(24/(parseInt(this.max)-parseInt(this.min)))*parseInt(this.value)-(24/(parseInt(this.max)-parseInt(this.min)))*parseInt(this.min);
+  var children = this.parentNode.childNodes[1].childNodes;
+  children[1].style.width=value+'%';
+  children[5].style.left=value+'%';
+  children[7].style.left=value+'%';children[11].style.left=value+'%';
+  children[11].childNodes[1].innerHTML=this.value;"/>
+
+                <input type="range" tabindex="0" value="24" max="24" min="0" step="1" oninput="
+  this.value=Math.max(this.value,this.parentNode.childNodes[3].value-(-1));
+  var value=(24/(parseInt(this.max)-parseInt(this.min)))*parseInt(this.value)-(24/(parseInt(this.max)-parseInt(this.min)))*parseInt(this.min);
+  var children = this.parentNode.childNodes[1].childNodes;
+  children[3].style.width=(24-value)+'%';
+  children[5].style.right=(24-value)+'%';
+  children[9].style.left=value+'%';children[13].style.left=value+'%';
+  children[13].childNodes[1].innerHTML=this.value;"/>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+
+    <input type="number" name="hourInputName" id="hourInputId" value="0" min="0" max="23" oninput="onInputHour()">
+    -
+    <input type="text" name="hourOutputName" id="hourOutputId" value="1" disabled size="5"></input>
+    </form>
+</div>
+
+
+
+<script>
+    let backupColorList = [
+        "#ff7f0e",
+        "#1f77b4"
+    ];
+    var map = L.map('mapid').setView([30.26, 120.19], 11);
+
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+        maxZoom: 18,
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+            '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        id: 'mapbox.light'
+    }).addTo(map);
+
+    //点击显示地理坐标经纬度
+    var popup = L.popup();
+
+    function onMapClick(e) {
+        popup
+            .setLatLng(e.latlng)
+            .setContent("You clicked the map at " + e.latlng.toString())
+            .openOn(map);
+    }
+
+    // map.on('click', onMapClick);
+
+
+    var coords = [[30.132932, 119.963804], [30.132932, 120.437324], [30.409347999999998, 120.437324],
+        [30.409347999999998, 119.963804], [30.132932, 119.963804]];
+    var points = [[30.25378485, 120.17532209], [30.352731, 120.127945], [30.275079, 120.031128],
+        [30.321915, 120.320206], [30.281702, 120.19013], [30.181935, 120.100479]];
+
+    //global variable
+    var bottom = 30.012;
+    var up = 30.4439;
+    var left = 119.8691;
+    var right = 120.461;
+    var mapbounds = [[bottom, left], [top, right]];
+    var blockCount = 100;
+    var wideRange = right - left;
+    var heightRange = up - bottom;
+    var wideDistance = wideRange / blockCount;
+    var heightDistance = heightRange / blockCount;
+    var polyline = L.polyline(coords, {color: 'black', opacity: 0.5, weight: 0.5}).addTo(map);
+
+    // 绘制带区域功能的多边形
+    $.getJSON("./RP_new.json", function (data) {
+        d3.json("./regionVerticenew.json", function (dict) {
+            $.each(data, function (key, value) {
+                for (var i = 0; i < value.length; i += 1) {
+                    var c = d3.scale.category10();
+                    var colorScale = d3.scale.ordinal()
+                        .domain(['P0', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'])
+                        .range([c(0), c(1), c(2), c(3), c(4), c(5), c(6), c(7)]);
+                    var color = colorScale(key);
+                    let voronoiPic = L.polygon(dict[value[i]], {color: color, opacity: 0.5, weight: 0.5}).addTo(map);//.bindPopup("region_"+value[i])
+                    voronoiPic.bringToBack();
+                }
+            })
+        });
+    });
+
+    // 返回一个有前缀的小时时间
+    function judgeHourTime(hourTime) {
+        let x = hourTime;
+        if (x.length === 1) {
+            return "0" + x;
+        } else {
+            return x;
+        }
+    }
+
+    // 计算所要画箭头的头尾
+    function calHeadTail(point1, point2, ratio1, ratio2) {
+
+        return [
+            //side
+            point1[0] >= point2[0] ? [point1[0], point1[1] + wideDistance * ratio1 * 3 / 2] : [point1[0] + heightDistance * ratio1 * 3, point1[1] + wideDistance * ratio1 * 3 / 2],
+            point1[1] >= point2[1] ? [point2[0] + heightDistance * ratio2 * 3 / 2, point2[1] + wideDistance * ratio2 * 3] : [point2[0] + heightDistance * ratio2 * 3 / 2, point2[1]],
+            //center
+            // [point1[0] + heightDistance * 3 / 2, point1[1] + wideDistance * 3 / 2],
+            // [point2[0] + heightDistance * 3 / 2, point2[1] + wideDistance * 3 / 2],
+            point1[0] >= point2[0] ? 1 : 0,
+            point1[1] >= point2[1] ? 1 : 0,
+        ]
+    }
+
+    /*
+     * @basePoint:  发射区域的中心点
+     * @arrowPoint: 指向区域的中心点
+     * @deviation:  需要偏离多少 default=0.003
+     */
+    function getArrowCoordinateResult(basePoint, arrowPoint, deviation = 0.003) {
+        //计算转移矩阵
+        function createTransformMatrix(a, b, c, d) {
+            let matrixTransform = math.matrix([
+                [a, c],
+                [b, d],
+            ]);
+            return matrixTransform;
+        }
+
+        function calcAngleRadians(x, y) {
+            // return Math.atan2(y, x) * 180 / Math.PI;//degree
+            return Math.atan2(y, x);
+        }
+
+        deltax = arrowPoint[1] - basePoint[1];//lng
+        deltay = arrowPoint[0] - basePoint[0];//lat
+        let a = math.matrix([
+            deltax,//lng
+            deltay//lat
+        ]);
+        let theta = calcAngleRadians(deltay, deltax);
+        //先对于b进行变换矩阵变成直线上进行作业
+        let b = math.chain(math.multiply(
+            createTransformMatrix(
+                Math.cos(theta),
+                Math.sin(theta),
+                -Math.sin(theta),
+                Math.cos(theta)
+            ),
+            a
+        ))
+            .squeeze()
+            .done();
+        let tmpLng = (b.subset(math.index(0)));//lng
+        let tmpLat = (b.subset(math.index(1)));//lat
+
+        //找到直线上面的两个点
+        let shortenRatio = 7 / 8;
+        let completeShortenRatio = 1 - shortenRatio;
+        let d1 = [points[0][0] + tmpLat, points[0][1] + tmpLng];
+        let newPoint1 = [basePoint[0] + tmpLat * shortenRatio, basePoint[1] + tmpLng * shortenRatio + deviation];
+        let newPoint2 = [basePoint[0] + tmpLat * completeShortenRatio, basePoint[1] + tmpLng * completeShortenRatio + deviation];
+        let newPoint1Mx = math.matrix([
+            newPoint1[1] - basePoint[1],//lng
+            newPoint1[0] - basePoint[0]//lat
+        ]);
+        let newPoint2Mx = math.matrix([
+            newPoint2[1] - basePoint[1],//lng
+            newPoint2[0] - basePoint[0]//lat
+        ]);
+        //换回原来的线性空间找出箭头的起始与终点
+        let r1 = math.chain(math.multiply(
+            math.inv(
+                createTransformMatrix(
+                    Math.cos(theta),
+                    Math.sin(theta),
+                    -Math.sin(theta),
+                    Math.cos(theta)
+                )),
+            newPoint1Mx
+        ))
+            .squeeze()
+            .done();
+        let r2 = math.chain(math.multiply(
+            math.inv(
+                createTransformMatrix(
+                    Math.cos(theta),
+                    Math.sin(theta),
+                    -Math.sin(theta),
+                    Math.cos(theta)
+                )),
+            newPoint2Mx
+        ))
+            .squeeze()
+            .done();
+
+        tmpLat = (r1.subset(math.index(1)));//lat
+        tmpLng = (r1.subset(math.index(0)));//lng
+
+        let rp1 = [basePoint[0] + tmpLat, basePoint[1] + tmpLng];
+        tmpLat = (r2.subset(math.index(1)));//lat
+        tmpLng = (r2.subset(math.index(0)));//lng
+        let rp2 = [basePoint[0] + tmpLat, basePoint[1] + tmpLng];
+        return [
+            rp2,//close to base
+            rp1,//the other side
+            basePoint[0] >= arrowPoint[0] ? 1 : 0,
+            basePoint[1] >= arrowPoint[1] ? 1 : 0,
+        ]
+    }
+
+    let ArrowDict = {};
+
+    //画箭头
+    function drawArrow(p1, p2, value, arrowDictIndex1, arrowDictIndex2) {
+        let sPoints = getArrowCoordinateResult(p1, p2);
+        /**
+         * 1 & 1 指向的box在 上 & 右方
+         * 0 & 1             下 & 右方
+         * 1 & 0             上 & 左方
+         * 0 & 0             下 & 左方
+         */
+        let myFactor = sPoints[2] ^ sPoints[3] ? -0.1 : -0.1;
+        /**
+         *  ------                      ------
+         * | box1 |                    | box2 |
+         *  ------                      ------
+         *     right_arrow       left_arrow
+         *              ------
+         *             | box3 |
+         *              ------
+         *    left_arrow         right_arrow
+         *  ------                      ------
+         * | box4 |                    | box5 |
+         *  ------                      ------
+         *
+         */
+        //let arrowHeadDirection = sPoints[2] ^ sPoints[3] ? "#arrow_right_blue" : "#arrow_left_blue";
+        const swoopy1 = L.swoopyArrow(sPoints[0], sPoints[1], {
+            label: '',
+            labelFontSize: 12,
+            iconAnchor: [20, 10],
+            iconSize: [20, 16],
+            weight: value * 5 + 1,
+            factor: myFactor,
+            color: "#ed6a5a",
+            opacity: 0.8,
+            // arrowFilled: false,
+            // hideArrowHead: true,
+            // arrowId:"#arrow_orange"
+        }).addTo(ArrowDict[arrowDictIndex1]);
+
+        //shoot back
+        sPoints = getArrowCoordinateResult(p2, p1);
+        /**
+         * 1 & 1 指向的box在 上 & 右方
+         * 0 & 1             下 & 右方
+         * 1 & 0             上 & 左方
+         * 0 & 0             下 & 左方
+         */
+        myFactor = sPoints[2] ^ sPoints[3] ? -0.1 : -0.1;
+        /**
+         *  ------                      ------
+         * | box1 |                    | box2 |
+         *  ------                      ------
+         *     right_arrow       left_arrow
+         *              ------
+         *             | box3 |
+         *              ------
+         *    left_arrow         right_arrow
+         *  ------                      ------
+         * | box4 |                    | box5 |
+         *  ------                      ------
+         *
+         */
+        arrowHeadDirection = sPoints[2] ^ sPoints[3] ? "#arrow_right_blue" : "#arrow_left_blue";
+        const swoopy2 = L.swoopyArrow(sPoints[0], sPoints[1], {
+            label: '',
+            labelFontSize: 12,
+            iconAnchor: [20, 10],
+            iconSize: [20, 16],
+            weight: value * 5 + 1,
+            factor: myFactor,
+            color: "#2ec4b6",
+            opacity: 0.8,
+            // arrowFilled: false,
+            // hideArrowHead: true,
+            // arrowId: arrowHeadDirection
+        }).addTo(ArrowDict[arrowDictIndex1]);
+    }
+
+    let heatPointGroup = {};
+
+
+    //循環加入箭頭
+    function initArrow(startHour) {
+        let searchHour = startHour;
+        $.getJSON("./RPPattern_volume.json", function (flowValue) {
+
+            function arraysEqual(a, b) {
+                if (a === b) return true;
+                if (a == null || b == null) return false;
+                if (a.length != b.length) return false;
+
+                // If you don't care about the order of the elements inside
+                // the array, you should sort both arrays here.
+                // Please note that calling sort on an array will modify that array.
+                // you might want to clone your array first.
+
+                for (var i = 0; i < a.length; ++i) {
+                    if (a[i] !== b[i]) return false;
+                }
+                return true;
+            }
+
+            //处理热点被点击的事件
+            function onHeatPointClick(e) {
+                function isPointInside(leftBottomPoint, rightTopPoint, point) {
+                    if (rightTopPoint[0] > point[0] && point[0] > leftBottomPoint[0] && rightTopPoint[1] > point[1] && point[1] > leftBottomPoint[1]) {
+                        return true;
+                    } else return false;
+                }
+
+                e.target.setStyle({fillColor: "#696969", fillOpacity: 1});
+                e.sourceTarget.setStyle({fillColor: "#e377c2", fillOpacity: 1});
+                let ptSW = e.layer._bounds._southWest;
+                let ptNE = e.layer._bounds._northEast;
+                let leftBottomPoint = [ptSW.lat, ptSW.lng];
+                let rightTopPoint = [ptNE.lat, ptNE.lng];
+                for (let i = 0; i < points.length; i++) {
+                    if (isPointInside(leftBottomPoint, rightTopPoint, points[i])) {
+                        ArrowDict[i.toString()].addTo(map);
+                    } else {
+                        ArrowDict[i.toString()].removeFrom(map);
+                    }
+                }
+            }
+
+            /*
+             * level relation: heatPointGroup>map
+             *                 addHeatPoint>heatPointGroup>click>onHeatPointClick>show arrow
+             */
+            if (Object.keys(heatPointGroup).length > 0) {
+                let heatPointGrouopLength = Object.keys(heatPointGroup).length;
+                for (let i = 0; i < heatPointGrouopLength; i++) {
+                    heatPointGroup[Object.keys(heatPointGroup)[i]].removeFrom(map);
+                }
+            }
+            heatPointGroup[searchHour] = L.featureGroup().addTo(map);
+            heatPointGroup[searchHour].on('click', onHeatPointClick);
+
+
+            function addHeatPoint(hourTime) {
+                let ratioList = [];//for arrow ratio
+                let searchTime = judgeHourTime(hourTime);
+                console.log(searchHour);
+                let regionValueList = [];
+                for (var i = 0; i < points.length; i++) {
+                    let name = "P" + i.toString() + "_P" + i.toString() + "_" + searchTime;
+                    regionValueList.push(flowValue[name]);
+                }
+                let max = Math.max(...regionValueList);
+                for (var i = 0; i < points.length; i++) {
+                    let ratio = regionValueList[i] / max;
+                    ratioList.push(ratio);
+                    var bound = [
+                        [points[i][0] - heightDistance * ratio * 3 / 2, points[i][1] - wideDistance * ratio * 3 / 2],
+                        [points[i][0] + heightDistance * ratio * 3 / 2, points[i][1] + wideDistance * ratio * 3 / 2]
+                    ];
+                    var heatPoint = L.rectangle(bound, {
+                        color: '#696969',
+                        fillColor: '#696969',
+                        opacity: 1,
+                        weight: 1
+                    }).addTo(heatPointGroup[searchTime]);
+                }
+
+
+                //循环加入箭头
+                for (let i = 0; i < points.length; i++) {
+                    ArrowDict[i.toString()] = L.featureGroup();
+                }
+                for (let i = 0; i < points.length; i++) {
+                    for (let j = 0; j < points.length; j++) {
+                        if (i === j) {
+                            continue;
+                        } else {
+                            let name = "P" + i.toString() + '_' + 'P' + j.toString() + '_' + searchHour;
+                            drawArrow(points[i], points[j], parseFloat(flowValue[name]) / 467, i.toString(), j.toString())
+                        }
+                    }
+                }
+            }//finish add Heat point
+
+            addHeatPoint(searchHour);
+
+        });
+    }
+
+    //處理input
+    function onInputHour() {
+        let x = document.getElementById("hourInputId").value;
+        document.getElementById("hourOutputId").value = parseInt(x) + 1;
+        if (x.length === 1) {
+            x = "0" + x;
+        }
+        //清除上一次的arrow 顯示
+        for (let i = 0; i < points.length; i++) {
+            ArrowDict[i.toString()].removeFrom(map);
+        }
+        initArrow(x);
+    }
+
+    //先從00小時開始繪製箭頭
+    initArrow("00");
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+	    <title>Circular heat chart example</title>
+	    <link rel="stylesheet" href="css/style.css">
+	    <link rel="stylesheet" href="css/svg.css">
+		<link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/default.min.css">
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<script src="js/circularHeatChart.js"></script>
+		<script src = "https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.13.0/d3-legend.min.js"></script>
+	</head>
+
+	<body>
+		<div class="chart" id="chart1" ></div>
+		<div class="chart" id="chart2" ></div>
+		<div class="chart" id="chart3" ></div>
+		<script type="text/javascript">
+d3.csv("trafficVolume.csv",function(error,csvdata){
+	if(error){
+		console.log(error);
+	}
+	let mydata = [];
+	for (var i = 0; i < 168; i++) {
+		var temp = csvdata[i].onVolume;
+		var temp1 = parseInt(temp);
+		mydata.push(temp1);
+	}
+	var chart1 = circularHeatChart()
+			.innerRadius(20)
+			.range(["white", "steelblue"])
+			.radialLabels(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+			.segmentLabels(["Midnight", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am",
+				"11am", "Midday", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"]);
+
+	d3.select('#chart1')
+			.selectAll('svg')
+			.data([mydata])
+			.enter()
+			.append('svg')
+			.call(chart1);
+
+	var colorScale = d3.scale.linear()
+			.domain([0,8])
+			.range(["white", "steelblue"]);
+
+	var dataScale = d3.scale.linear()
+			.domain([0,8])
+			.range(d3.extent(mydata));
+
+	var mysvg = d3.select('#chart3')
+			.append('svg');
+	var legend = mysvg.selectAll(".legend")
+			.data([0,1,2,3,4,5,6,7,8]);
+	legend.enter().append("g")
+			.attr("class", "legend");
+	legend.append("rect")
+			.attr("x", function(d, i) { return 45*i; })
+			.attr("y", 50)
+			.attr("width", 45)
+			.attr("height", 20)
+			.style("fill", function(d, i) { return colorScale(d); });
+	legend.append("text")
+			.attr("class", "mono")
+			.attr("font-size", "10")
+			.text(function(d,i) {
+				if(d>7) return "≥"+Math.round(dataScale(d));
+				return  Math.round(dataScale(d));
+			})
+			.attr("x", function(d, i) { return 45* i+10; })
+			.attr("y", 90);
+	legend.exit().remove();
+
+
+
+
+
+
+
+	 mydata = [];
+	for (var i = 0; i < 168; i++) {
+		var temp = csvdata[i].offVolume;
+		var temp1 = parseInt(temp);
+		mydata.push(temp1);
+	}
+	var chart2 = circularHeatChart()
+			.innerRadius(20)
+			.range(["white", "steelblue"])
+			.radialLabels(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+			.segmentLabels(["Midnight", "1am", "2am", "3am", "4am", "5am", "6am", "7am", "8am", "9am", "10am",
+				"11am", "Midday", "1pm", "2pm", "3pm", "4pm", "5pm", "6pm", "7pm", "8pm", "9pm", "10pm", "11pm"]);
+
+	d3.select('#chart2')
+			.selectAll('svg')
+			.data([mydata])
+			.enter()
+			.append('svg')
+			.call(chart2);
+});
+
+
+		</script>
+	</body>
+</html>

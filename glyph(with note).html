@@ -1,0 +1,355 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <style>
+      rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;   
+      }
+
+      text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+      }
+
+      text.axis-workweek {
+        fill: #000;
+      }
+
+      text.axis-worktime {
+        fill: #000;
+      }
+    </style>
+    <script src="https://d3js.org/d3.v5.js"></script>
+  </head>
+  <body>
+    <div id="chart"></div>
+    <script type="text/javascript">
+const POIColorArray = ["#2EA64C", "#A9D381", "#F0989A", "#F9C17C", "#F7944C", "#CBB0D3", "#ACCFE1", "#5D4581", "#AC5B2F"];
+//画图主函数
+ function draw(centerColorIndex, arcData1, arcData2, POIData) {
+        let width = 240;
+        let height = 240;
+        let svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+
+        let max = d3.extent([d3.extent(arcData1)[1],d3.extent(arcData2)][1])[1]
+        // console.log("max",max)
+
+        //画arc的工厂函数1
+        let arcFactory1 = d3.arc()
+            .innerRadius(height / 10)
+            .outerRadius(function (d) {
+                let da = arcData1[d];
+                if (arcData2[d] > arcData1[d]) {
+                    da = arcData2[d]
+                }
+                if( da/max* 55 + height / 10>85){
+                    return 85
+                }
+
+                if(da/max* 55 + height / 10<=0){
+                    return height / 10;
+                }
+                if (da > 0) {
+                    return da/max* 55 + height / 10
+                }
+
+                else {
+                    return height / 10;
+                }
+            })
+            .startAngle(function (d) {
+                return Math.PI / 12 * d + Math.PI / 2 - Math.PI / 2
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1) + Math.PI / 2 - Math.PI / 2
+            });
+        //画arc的工厂函数2
+        let arcFactory = d3.arc()
+            .innerRadius(height / 10)
+            .outerRadius(function (d) {
+                let da = arcData1[d];
+                if (arcData1[d] >= arcData2[d]) {
+                    da = arcData2[d]
+                }
+                if(da/max* 55 + height / 10>85){
+                    return 85
+                }
+                if(da/max* 55 + height / 10<=0){
+                    return height / 10;
+                }
+                if (da > 0) {
+
+                    return da/max* 55 + height / 10
+                }
+                else {
+                    return height / 10;
+                }
+            })
+            .startAngle(function (d) {
+                return Math.PI / 12 * d + Math.PI / 2 - Math.PI / 2
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1) + Math.PI / 2 - Math.PI / 2
+            });
+        // let d1 = [];
+        // let d2 = [];
+        // for(let i=0;i<24;i++){
+        //     d1.push(Math.random()*30+5);
+        //     d2.push(Math.random()*50+5);
+        // }
+        // console.log("d1",d1);()=>'#3399ff'
+
+        //画第一组24个的arc
+        for (let index = 0; index < 24; index++) {
+            let da, color;
+            if (arcData1[index] > arcData2[index]) {
+                da = arcData1[index]
+                color = "#3399ff"
+            }
+            else {
+                da = arcData2[index]
+                color = "#623fa3"
+            }
+            // console.log("2",da)
+            let g1 = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+            g1.attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("d", arcFactory1)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+        //画第二组24个的arc
+        for (let index = 0; index < 24; index++) {
+            let da, color;
+            if (arcData1[index] > arcData2[index]) {
+                da = arcData2[index]
+                color = "#623fa3"
+            }
+            else {
+                da = arcData1[index]
+                color = "#3399ff"
+            }
+
+            // console.log("1",da)
+            let g = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+                .attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("d", arcFactory)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+
+        //画灰色分隔圈圈 
+        svg.append("circle")
+            .attr("stroke", "LightGrey")
+            .attr("fill", d3.schemeCategory10[centerColorIndex])
+            .attr("r", height / 10)
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+        svg.append("circle")
+            .attr("stroke", "LightGrey")
+            .attr("fill", "none")
+            .attr("r", 85)
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+        svg.append("circle")
+            .attr("stroke", "LightGrey")
+            .attr("fill", "none")
+            .attr("r", 120)
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+        //画外面的框
+        svg.append("rect")
+            .attr('width', width)
+            .attr('height', height)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+        let rScale = d3.scaleLinear()
+            .domain([0, 20])
+            .range([0, d3.extent(POIData)[1]]);
+        //画最外层的POI点
+        for (let i = 0; i < 9; i++) {
+            let poir = 102;
+            let cx = width / 2;
+            let cy = height / 2;
+            let p1 = svg.append("g")
+            let poiCircle = p1.append("circle")
+                .attr("r", function () {
+                    if (Math.log((POIData[i]) * 10000) * 10 > 10)
+                        return 10;
+                    if(Math.log((POIData[i]) * 10000) * 10<=0){
+                        return 0;
+                    }
+                    return Math.log((POIData[i]) * 10000) * 10;
+                })
+                .attr("cx", cx + poir * Math.sin(2 * Math.PI / 9 * (i + 2) + Math.PI / 15))
+                .attr('cy', cy + poir * Math.cos(2 * Math.PI / 9 * (i + 2) + Math.PI / 15))
+                .attr('fill', POIColorArray[i]);
+        }
+
+    };
+
+
+
+      // let width = 558;
+      //   let height = 310;
+      //   let svg = d3.select('#chart')
+      //       .append("svg")
+      //       .attr("width", width)
+      //       .attr("height", height)
+      //   let arcCircle = d3.arc()
+      //       .innerRadius(0)
+      //       .outerRadius(height / 10)
+      //       .startAngle(Math.PI / 2)
+      //       .endAngle(Math.PI * 2)
+      //   let arcCircleFactory = d3.arc()
+      //       .innerRadius(0)
+      //       .outerRadius(height / 10)
+      //       .startAngle(function (d) {
+      //           return Math.PI / 10 * d
+      //       })
+      //       .endAngle(function (d) {
+      //           return Math.PI / 10 * (d + 1)
+      //       });
+      //   let l = [0, 1, 2, 3, 4]
+      //   // let innerCircle2 = svg.selectAll("g")
+      //   //     .data(l).enter()
+      //   //     .append("path")
+      //   //     .attr("class", "innerCircle")
+      //   //     .attr("fill", d => d3.schemeCategory10[d])
+      //   //     .attr("stroke", d => d3.schemeCategory10[d])
+      //   //     .attr("d", arcCircleFactory)
+      //   //     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   // let innerCircle1 = svg.append("g")
+      //   //     .append("path")
+      //   //     .attr("class", "innerCircle")
+      //   //     .attr("fill", "LightGrey")
+      //   //     .attr("stroke", "LightGrey")
+      //   //     .attr("d", arcCircle)
+      //   //     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   let arcFactory = d3.arc()
+      //       .innerRadius(height / 10)
+      //       .outerRadius(d=>height / 10+d)
+      //       .startAngle(function (d,i) {
+      //           return Math.PI / 12 * i + Math.PI / 2
+      //       })
+      //       .endAngle(function (d,i) {
+      //           return Math.PI / 12 * (i + 1)+ Math.PI / 2
+      //       });
+        let d1 = [];
+        let d2 = [];
+        for(let i=0;i<24;i++){
+           d1.push(Math.random()*30+5);
+            d2.push(Math.random()*50+5);
+        }
+        draw(3,d1,d2,[200,300,400,500,600,400,300,600,700])
+      //   // console.log("d1",d1);
+      //   let g =svg.selectAll("g")
+      //       .data(d1).enter()
+      //       .append("path")
+      //       .attr("class", "arc")
+      //       .attr("fill",()=>'#e6e6fa')
+      //       .attr("stroke","LightGrey")
+      //       // .attr("opacity",0.8)
+      //       .attr("d", arcFactory)
+      //       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   let g1 =svg.selectAll("g")
+      //       .data(d2).enter()
+      //       .append("path")
+      //       .attr("class", "arc")
+      //       .attr("opacity",0.8)
+      //       .attr("fill",()=>'#f0f8ff')
+      //       .attr("stroke","LightGrey")
+      //       .attr("d", arcFactory)
+      //       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   // for (let i = 0; i < 1; i++) {
+      //   //     let d1 = Math.random() * 20;
+      //   //     let d2 = Math.random() * 20;
+      //   //     if(d1>d2){
+      //   //         let arc2 =svg.selectAll("g")
+      //   //             .append("path")
+      //   //             .data(d2)
+      //   //             .attr("class", "arc")
+      //   //             .attr("fill",'#4284f5' )
+      //   //             .attr("stroke","LightGrey")
+      //   //             .attr("d", arcFactory)
+      //   //             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   //     }
+      //   //     else{
+      //   //         let arc2 =svg.selectAll("g")
+      //   //             .append("path")
+      //   //             .data(d2)
+      //   //             .attr("class", "arc")
+      //   //             .attr("fill",'#4284f5' )
+      //   //             .attr("stroke","LightGrey")
+      //   //             .attr("d", arcFactory)
+      //   //             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   //         let arc1 =svg.selectAll("g")
+      //   //             .append("path")
+      //   //             .data(d1)
+      //   //             .attr("class", "arc")
+      //   //             .attr("fill",'#5732a8' )
+      //   //             .attr("stroke","LightGrey")
+      //   //             .attr("d", arcFactory)
+      //   //             .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+      //   //     }
+      //   // }
+
+      //   svg.append("circle")
+      //       .attr("stroke","LightGrey")
+      //       .attr("fill","none")
+      //       .attr("r",height/3)
+      //       .attr("cx",width/2)
+      //       .attr("cy",height/2)
+      //   svg.append("circle")
+      //       .attr("stroke","LightGrey")
+      //       .attr("fill","none")
+      //       .attr("r",height/2)
+      //       .attr("cx",width/2)
+      //       .attr("cy",height/2)
+      //   for(let i = 0;i<9;i++){
+      //       let poir = 130;
+      //       let cx = width/2-20;
+      //       let cy = height/2-20;
+      //       let p1 = svg.append("g")
+      //           .attr("width",50)
+      //           .attr("height",50)
+      //           .attr("transform","translate("+(cx + poir * Math.sin(2*Math.PI/9*(i+2)+Math.PI/15))+","+(cy+ poir * Math.cos(2*Math.PI/9*(i+2)+Math.PI/15))+")");
+      //       // console.log("transform","translate("+(width/2 + poir * Math.sin(2*Math.PI/9*i))+","+(cy+ poir * Math.cos(2*Math.PI/9*i))+")")
+      //       // console.log(width/2+poir * Math.sin(0))
+
+      //       d3.xml(iconName[i]).then((data)=>{
+      //           p1.node().append(data.documentElement)
+      //       })
+      //   }
+      //   // for(let j=0;j<1;j++){
+      //   //     console.log(global.poimap[j])
+      //   //     svg
+      //   //         .append("foreignObject")
+      //   //         .attr("width", width)
+      //   //         .attr("height", height)
+      //   //         .append("xhtml:body")
+      //   //         .attr("width",40)
+      //   //         .attr('height',40)
+      //   //         .append("embed")
+      //   //         .attr("src","art-en.svg")
+      //   //         .attr("width",40)
+      //   //         .attr('height',40)
+      //   //         .attr("transform",'translate('+105+","+105+")" )
+      //   // }
+    </script>
+  </body>
+</html>
+

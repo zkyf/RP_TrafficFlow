@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+  <head>
+    <link rel="stylesheet" href="js/antd.css" />
+    <link rel="stylesheet" href="js/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+    <!-- <script src="https://d3js.ordg/d3.v5.js"></script> -->
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
+    <!-- <script src='d3/d3.min.js'></script> -->
+  </head>
+  <body>
+    <div id="chart"></div>
+    <script type="text/javascript">
+
+//画图主函数
+ function draw(width,centerColorIndex, innerR, max,arcData1, arcData2) {
+
+        let height = 240;
+        let svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        //画arc的工厂函数1
+        let arcFactory1 = d3.svg.arc()
+            .innerRadius(innerR)
+            .outerRadius(function (d) {
+                let da = arcData1[d];
+                if (da > 0) {
+                    return da/max* 25 + innerR
+                }
+                else {
+                    return innerR;
+                }
+            })
+            .startAngle(function (d) {
+                return Math.PI / 12 * d
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1)
+            });
+
+        //画arc的工厂函数2
+        let arcFactory = d3.svg.arc()
+            .innerRadius(function (d) {
+                let da = arcData2[d];
+
+                if (da > 0) {
+                    return innerR- da/max*20
+                }
+                else {
+                    return innerR;
+                }
+            })
+            .outerRadius(innerR)
+            .startAngle(function (d) {
+                return Math.PI / 12 * d
+            })
+            .endAngle(function (d) {
+                return Math.PI / 12 * (d + 1) 
+            });
+
+                        for(var i=1; i<4; i++) {
+                    svg.append("circle")
+                        .attr("stroke", "#000000")
+                        .attr("stroke-width","0.5px")
+                        .attr("stroke-dasharray", "5,5")
+                        .attr("fill", "none")
+                        .attr("r", 50/4*i+innerR)
+                        .attr("cx", width/2)
+                        .attr("cy", height/2)
+                }
+                svg.append("circle")
+                .attr("stroke", "#000000")
+                .attr("stroke-width","1")
+                .attr("fill", "none")
+                .attr("r", 50+innerR)
+                .attr("cx", width/2)
+                .attr("cy", height/2)
+
+
+        //画第一组24个的arc
+        for (let index = 0; index < 24; index++) {
+            let color;
+                color = "#2BA8D9"
+            let g1 = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+            g1.attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("stroke-width","0.2px")
+                .attr("d", arcFactory1)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+
+        //画第二组24个的arc
+        for (let index = 0; index < 24; index++) {
+            let color;
+                color = "#FFA31D"
+
+            let g = svg.append("g")
+                .data([index])
+                .append("path")
+                .attr("class", "arc")
+                .attr("fill", color)
+                .attr("stroke", "LightGrey")
+                .attr("stroke-width","0.2px")
+                .attr("d", arcFactory)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        }
+
+            var innerLineColor = "#a7535a";
+            var delta = 50+innerR;
+            var lineNum = 8;
+            for(var i=0; i<lineNum; i++) {
+                var dx = delta*Math.sin(Math.PI*2/lineNum*i);
+                var dy = -delta*Math.cos(Math.PI*2/lineNum*i)
+                svg.append("line")
+                    .attr("stroke", innerLineColor)
+                    .attr("stroke-width", "0.5")
+                    .attr("stroke-dasharray", "2,2")
+                    .attr("x1", width/2)
+                    .attr("y1", height/2)
+                    .attr("x2", width/2+dx)
+                    .attr("y2", height/2+dy)
+                var tx = -(delta-dx)*0.1;
+                var ty = (delta+dy)*0.1-2;
+                svg.append("text").attr("class", "mono").text(String(Math.floor(24/lineNum)*i)).attr("x", width/2+dx+tx+2).attr("y", height/2+dy+ty-3)
+            }
+
+
+              //绘制内圆
+        // svg.append("circle")
+        //     .attr("stroke", "LightGrey")
+        //     .attr("fill", centerColorIndex)
+        //     .attr("r",7) //半径为240/10=24
+        //     .attr("stroke-width","0.4px")
+        //     .attr("cx", width / 2)
+        //     .attr("cy", height / 2)
+
+                    svg.append("text")
+                .attr("x", width/2-11)
+                .attr("y", 20)
+                .text("F#0")
+                .attr("fill", centerColorIndex)
+                .attr("rx", 4)
+                .attr("ry", 4)
+                .attr("font-weight", 600);
+    };
+
+
+
+
+        d3.json("onOffTime.json", function(data){
+
+         var  keyList = []
+         for(var key in data){
+          keyList.push(key);
+         }
+         console.log("keyList:", keyList)
+
+         var width = 400;
+         for (var i = 0; i<1; i++){
+
+          d1 = data[keyList[i]][0];
+          d2 = data[keyList[i]][1];
+
+          var c = d3.scale.category10();
+          var colorScale=d3.scale.ordinal()
+              .domain(['P0','P1','P2','P3','P4','P5','P6','P7'])
+              .range([c(0),c(1),c(2),c(3),c(4),c(5),c(6),c(7)]);
+          var color=colorScale(keyList[i]);
+          console.log("color:",color);
+
+          console.log("d1:",d1);
+          console.log("d2:",d2);
+
+           d3.json("total.json", function(data){
+            console.log(data);
+            var max = d3.extent(data)[1]
+            console.log("max:", max)
+            var chart= draw(width,color,30,max,d1,d2);
+          });
+          
+         }
+         
+        });
+
+
+
+    </script>
+  </body>
+</html>
+
+
